@@ -21,10 +21,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     widget = new TerrainWidget();
-	QGridLayout* GLlayout = new QGridLayout;
+    QGridLayout* GLlayout = new QGridLayout;
     GLlayout->addWidget(widget, 0, 0);
-	GLlayout->setContentsMargins(0, 0, 0, 0);
-	ui->glWidget->setLayout(GLlayout);
+    GLlayout->setContentsMargins(0, 0, 0, 0);
+    ui->glWidget->setLayout(GLlayout);
 
     widget->setCamera(Camera(Vector3(-10.0, -10.0, 10.0), Vector3(0.0, 0.0, 0.0)));
 

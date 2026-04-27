@@ -188,124 +188,101 @@ void ScalarField2::smooth(int n)
 */
 ScalarField2 ScalarField2::gaussianBlur(int r) const
 {
-  // Fixed sigma to half kernel radius
-  double sigma = 0.5 * double(r);
-  double sigma2 = sigma * sigma;
-  double norm = 1.0 / (sqrt(2.0 * Math::Pi) * sigma);
+    // Fixed sigma to half kernel radius
+    double sigma = 0.5 * double(r);
+    double sigma2 = sigma * sigma;
+    double norm = 1.0 / (sqrt(2.0 * Math::Pi) * sigma);
 
-  // Kernel
-  std::vector<double> kernel(r + 1);
-  for (int i = 0; i <= r; i++)
-  {
-    kernel[i] = norm * exp((-0.5 * double(i) * double(i)) / sigma2);
-  }
-
-  std::vector<double> resx(nx * ny);
-
-  // Filter x direction
-  for (int y = 0; y < ny; y++)
-  {
-    for (int x = 0; x < nx; x++)
-    {
-      double v = kernel[0] * at(x, y);
-      double w = kernel[0];
-      for (int k = 1; k <= r; k++)
-      {
-        if (isValidCell(x + k, y))
-        {
-          v += kernel[k] * at(x + k, y);
-          w += kernel[k];
-        }
-        if (isValidCell(x - k, y))
-        {
-          v += kernel[k] * at(x - k, y);
-          w += kernel[k];
-        }
-      }
-      resx[cellId(x, y)] = v / w;
+    // Kernel
+    std::vector<double> kernel(r + 1);
+    for (int i = 0; i <= r; i++) {
+        kernel[i] = norm * exp((-0.5 * double(i) * double(i)) / sigma2);
     }
-  }
 
-  ScalarField2 res(domain, nx, ny);
+    std::vector<double> resx(nx * ny);
 
-  // Filter y direction
-  for (int x = 0; x < nx; x++)
-  {
-    for (int y = 0; y < ny; y++)
-    {
-      double v = kernel[0] * resx[cellId(x, y)];
-      double w = kernel[0];
-      for (int k = 1; k <= r; k++)
-      {
-        if (isValidCell(x, y + k))
-        {
-          v += kernel[k] * resx[cellId(x, y + k)];
-          w += kernel[k];
+    // Filter x direction
+    for (int y = 0; y < ny; y++) {
+        for (int x = 0; x < nx; x++) {
+            double v = kernel[0] * at(x, y);
+            double w = kernel[0];
+            for (int k = 1; k <= r; k++) {
+                if (isValidCell(x + k, y)) {
+                  v += kernel[k] * at(x + k, y);
+                  w += kernel[k];
+                }
+                if (isValidCell(x - k, y)) {
+                  v += kernel[k] * at(x - k, y);
+                  w += kernel[k];
+                }
+            }
+            resx[cellId(x, y)] = v / w;
         }
-        if (isValidCell(x, y - k))
-        {
-          v += kernel[k] * resx[cellId(x, y - k)];
-          w += kernel[k];
-        }
-      }
-      res(x, y) = v / w;
     }
-  }
 
-  return res;
+    ScalarField2 res(domain, nx, ny);
+
+    // Filter y direction
+    for (int x = 0; x < nx; x++) {
+        for (int y = 0; y < ny; y++) {
+            double v = kernel[0] * resx[cellId(x, y)];
+            double w = kernel[0];
+            for (int k = 1; k <= r; k++) {
+                if (isValidCell(x, y + k)) {
+                    v += kernel[k] * resx[cellId(x, y + k)];
+                    w += kernel[k];
+                }
+                if (isValidCell(x, y - k)) {
+                    v += kernel[k] * resx[cellId(x, y - k)];
+                    w += kernel[k];
+                }
+            }
+            res(x, y) = v / w;
+        }
+    }
+
+    return res;
 }
 
 ScalarField2 ScalarField2::maxFilter(int w) const
 {
-  ScalarField2 filtered(getDomain(), nx, ny, 0);
+    ScalarField2 filtered(getDomain(), nx, ny, 0);
 
-  for (int i = 0; i < nx; i++)
-  {
-    for (int j = 0; j < ny; j++)
-    {
-      double v = at(i, j);
-      for (int di = -w; di <= w; di++)
-      {
-        for (int dj = -w; dj <= w; dj++)
-        {
-          if (isValidCell(i + di, j + dj))
-          {
-            v = std::max(v, at(i + di, j + dj));
-          }
+    for (int j = 0; j < ny; j++) {
+        for (int i = 0; i < nx; i++) {
+            double v = at(i, j);
+            IndexArea area = indexAreaFromWindow(i, j, w);
+            for (int dj = area.ymin(); dj <= area.ymax(); dj++) {
+                for (int di = area.xmin(); di <= area.xmax(); di++) {
+                    v = std::max(v, at(di, dj));
+                }
+            }
+            filtered(i, j) = v;
         }
-      }
-      filtered(i, j) = v;
     }
-  }
 
-  return filtered;
+    return filtered;
 }
 
 
 ScalarField2 ScalarField2::minFilter(int w) const
 {
-  ScalarField2 filtered(getDomain(), nx, ny, 0);
+    ScalarField2 filtered(getDomain(), nx, ny, 0);
 
-  for (int i = 0; i < nx; i++)
-  {
-    for (int j = 0; j < ny; j++)
-    {
-      double v = at(i, j);
-      for (int di = -w; di <= w; di++)
-      {
-        for (int dj = -w; dj <= w; dj++)
-        {
-          if (isValidCell(i + di, j + dj))
-          {
-            v = std::min(v, at(i + di, j + dj));
-          }
+    for (int j = 0; j < ny; j++) {
+        for (int i = 0; i < nx; i++) {
+            double v = at(i, j);
+            IndexArea area = indexAreaFromWindow(i, j, w);
+            for (int dj = area.ymin(); dj <= area.ymax(); dj++) {
+                for (int di = area.xmin(); di <= area.xmax(); di++) {
+                    v = std::min(v, at(di, dj));
+                }
+            }
+            filtered(i, j) = v;
         }
-      }
-      filtered(i, j) = v;
     }
-  }
 
-  return filtered;
+    return filtered;
 }
 
 
@@ -314,18 +291,16 @@ ScalarField2 ScalarField2::summedAreaTable() const
     ScalarField2 sat(domain, nx, ny, 0);
     sat[0] = at(0, 0);
     for (int i = 1; i < nx; i++)
-      sat[cellId(i, 0)] = at(i, 0) + sat[cellId(i - 1, 0)];
+        sat[cellId(i, 0)] = at(i, 0) + sat[cellId(i - 1, 0)];
     for (int j = 1; j < ny; j++)
-      sat[cellId(0, j)] = at(0, j) + sat[cellId(0, j - 1)];
-    for (int i = 1; i < nx; i++)
-    {
-      for (int j = 1; j < ny; j++)
-      {
-        sat[cellId(i, j)] = at(i, j)
-          + sat[cellId(i - 1, j)]
-          + sat[cellId(i, j - 1)]
-          - sat[cellId(i - 1, j - 1)];
-      }
+        sat[cellId(0, j)] = at(0, j) + sat[cellId(0, j - 1)];
+    for (int j = 1; j < ny; j++) {
+        for (int i = 1; i < nx; i++) {
+            sat[cellId(i, j)] = at(i, j)
+                + sat[cellId(i - 1, j)]
+                + sat[cellId(i, j - 1)]
+                - sat[cellId(i - 1, j - 1)];
+        }
     }
     return sat;
 }
@@ -535,8 +510,8 @@ ScalarField2 operator*(const ScalarField2& s1, const ScalarField2& s2)
 std::vector<std::pair<double, Index2>> ScalarField2::valuesWithIndex() const
 {
     std::vector<std::pair<double, Index2>> pts(nx*ny);
-    for (int i = 0; i < nx; i++) {
-        for (int j = 0; j < ny; j++) {
+    for (int j = 0; j < ny; j++) {
+        for (int i = 0; i < nx; i++) {
             pts[cellId(i, j)] = std::make_pair(at(i, j), Index2(i, j));
         }
     }

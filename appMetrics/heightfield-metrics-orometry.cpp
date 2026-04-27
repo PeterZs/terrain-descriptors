@@ -19,14 +19,14 @@ See Arge et al. 2013: Algorithms for Computing Prominence on Grid Terrains for f
 ScalarField2 HeightField::PeakPercentage(double r) const
 {
     ScalarField2 res(domain, nx, ny, 0.0);
-    for (int i = 0; i < nx; i++) {
-        for (int j = 0; j < ny; j++) {
+    for (int j = 0; j < ny; j++) {
+        for (int i = 0; i < nx; i++) {
             double h0 = at(i, j);
             int neighs = 0;
             int lowers = 0;
             IndexArea area = indexAreaFromRadius(i, j, r);
-            for (int di = area.xmin(); di <= area.xmax(); di++) {
-                for (int dj = area.ymin(); dj <= area.ymax(); dj++) {
+            for (int dj = area.ymin(); dj <= area.ymax(); dj++) {
+                for (int di = area.xmin(); di <= area.xmax(); di++) {
                     neighs++;
                     lowers += at(di, dj) < h0 ? 1 : 0;
                 }
@@ -56,50 +56,44 @@ When the radius increases, bigger peaks shadow them with larger ORS values.
 */
 ScalarField2 HeightField::ORS(double r) const
 {
-  ScalarField2 ors(domain, nx, ny, 0.0);
+    ScalarField2 ors(domain, nx, ny, 0.0);
 
-  double cellW = getCellSize()[0];
-  double cellH = getCellSize()[1];
-  double cellArea = cellW*cellH;
+    double cellW = getCellSize()[0];
+    double cellH = getCellSize()[1];
+    double cellArea = cellW*cellH;
 
-  for (int i = 0; i < nx; i++)
-  {
-    for (int j = 0; j < ny; j++)
-    {
-      double h0 = at(i, j);
-      double value = 0;
+    for (int j = 0; j < ny; j++) {
+        for (int i = 0; i < nx; i++) {
+            double h0 = at(i, j);
+            double value = 0;
 
-      IndexArea area = indexAreaFromRadius(i, j, r);
-      for (int di = area.xmin(); di <= area.xmax(); di++)
-      {
-        for (int dj = area.ymin(); dj <= area.ymax(); dj++)
-        {
-          double dist = sqrt((di - i) * cellW * (di - i) * cellW +
-                             (dj - j) * cellH * (dj - j) * cellH);
-          if (dist > r) continue;
+            IndexArea area = indexAreaFromRadius(i, j, r);
+            for (int dj = area.ymin(); dj <= area.ymax(); dj++) {
+                for (int di = area.xmin(); di <= area.xmax(); di++) {
+                    double dist = sqrt((di - i) * cellW * (di - i) * cellW +
+                                       (dj - j) * cellH * (dj - j) * cellH);
+                    if (dist > r) continue;
 
-          double hij = at(di, dj);
+                    double hij = at(di, dj);
 
-          // points higher than (i,j) do not contribute
-          if (hij < h0)
-          {
-            // slope
-            double s = (h0 - hij) / dist;
-            // normalized slope, for convergence. Other functions could be used, see original paper
-            double atanu = atan(s);
-            double f = (4.0 / (Math::Pi * Math::Pi * Math::Pi)) * (2 * s * atanu - log(s * s + 1) - atanu * atanu);
-            // integrate. We clamp to 0 to avoid precision errors and negative f
-            value += std::max(0.0, f * cellArea);
-          }
+                    // points higher than (i,j) do not contribute
+                    if (hij < h0) {
+                        // slope
+                        double s = (h0 - hij) / dist;
+                        // normalized slope, for convergence. Other functions could be used, see original paper
+                        double atanu = atan(s);
+                        double f = (4.0 / (Math::Pi * Math::Pi * Math::Pi)) * (2 * s * atanu - log(s * s + 1) - atanu * atanu);
+                        // integrate. We clamp to 0 to avoid precision errors and negative f
+                        value += std::max(0.0, f * cellArea);
+                    }
+                }
+            }
+
+            ors(i, j) = sqrt(value);
         }
-      }
-
-      ors(i, j) = sqrt(value);
     }
-  }
-  return ors;
+    return ors;
 }
-
 
 
 /*!
@@ -121,18 +115,14 @@ ScalarField2 HeightField::JutPlanar(double r) const
 {
     ScalarField2 jut(domain, nx, ny, 0.0);
 
-    for (int i = 0; i < nx; i++)
-    {
-        for (int j = 0; j < ny; j++)
-        {
+    for (int j = 0; j < ny; j++) {
+        for (int i = 0; i < nx; i++) {
             Vector3 p = Vertex(i, j);
             double jmax = 0;
 
             IndexArea area = indexAreaFromRadius(i, j, r);
-            for (int di = area.xmin(); di <= area.xmax(); di++)
-            {
-                for (int dj = area.ymin(); dj <= area.ymax(); dj++)
-                {
+            for (int dj = area.ymin(); dj <= area.ymax(); dj++) {
+                for (int di = area.xmin(); di <= area.xmax(); di++) {
                     if (di == i && dj == j) continue;
                     double dist = sqrt((di - i) * cellSize[0] * (di - i) * cellSize[0] +
                                        (dj - j) * cellSize[1] * (dj - j) * cellSize[1]);
@@ -174,18 +164,14 @@ ScalarField2 HeightField::RutPlanar(double r) const
 {
     ScalarField2 rut(domain, nx, ny, 0.0);
 
-    for (int i = 0; i < nx; i++)
-    {
-        for (int j = 0; j < ny; j++)
-        {
+    for (int j = 0; j < ny; j++) {
+        for (int i = 0; i < nx; i++) {
             Vector3 p = Vertex(i, j);
             double rmax = 0;
 
             IndexArea area = indexAreaFromRadius(i, j, r);
-            for (int di = area.xmin(); di <= area.xmax(); di++)
-            {
-                for (int dj = area.ymin(); dj <= area.ymax(); dj++)
-                {
+            for (int dj = area.ymin(); dj <= area.ymax(); dj++) {
+                for (int di = area.xmin(); di <= area.xmax(); di++) {
                     if (di == i && dj == j) continue;
                     double dist = sqrt((di - i) * cellSize[0] * (di - i) * cellSize[0] +
                                        (dj - j) * cellSize[1] * (dj - j) * cellSize[1]);
@@ -245,18 +231,14 @@ ScalarField2 HeightField::JutCurved(double r, double planetR) const
 {
     ScalarField2 jut(domain, nx, ny, 0.0);
 
-    for (int i = 0; i < nx; i++)
-    {
-        for (int j = 0; j < ny; j++)
-        {
+    for (int j = 0; j < ny; j++) {
+        for (int i = 0; i < nx; i++) {
             double jmax = 0;
             double hp = at(i, j);
 
             IndexArea area = indexAreaFromRadius(i, j, r);
-            for (int di = area.xmin(); di <= area.xmax(); di++)
-            {
-                for (int dj = area.ymin(); dj <= area.ymax(); dj++)
-                {
+            for (int dj = area.ymin(); dj <= area.ymax(); dj++) {
+                for (int di = area.xmin(); di <= area.xmax(); di++) {
                     if (di == i && dj == j) continue;
 
                     double dist = sqrt((di - i) * cellSize[0] * (di - i) * cellSize[0] +
@@ -295,18 +277,14 @@ ScalarField2 HeightField::RutCurved(double r, double planetR) const
 {
     ScalarField2 rut(domain, nx, ny, 0.0);
 
-    for (int i = 0; i < nx; i++)
-    {
-        for (int j = 0; j < ny; j++)
-        {
+    for (int j = 0; j < ny; j++) {
+        for (int i = 0; i < nx; i++) {
             double rmax = 0;
             double hp = at(i, j);
 
             IndexArea area = indexAreaFromRadius(i, j, r);
-            for (int di = area.xmin(); di <= area.xmax(); di++)
-            {
-                for (int dj = area.ymin(); dj <= area.ymax(); dj++)
-                {
+            for (int dj = area.ymin(); dj <= area.ymax(); dj++) {
+                for (int di = area.xmin(); di <= area.xmax(); di++) {
                     if (di == i && dj == j) continue;
 
                     double dist = sqrt((di - i) * cellSize[0] * (di - i) * cellSize[0] +
@@ -329,8 +307,8 @@ ScalarField2 HeightField::AngleReducedHeight(double R, int i, int j, bool conver
     ScalarField2 a(domain, nx, ny, 0);
 
     double hp = at(i, j);
-    for (int di = 0; di < nx; di++) {
-        for (int dj = 0; dj < ny; dj++) {
+    for (int dj = 0; dj < ny; dj++) {
+        for (int di = 0; di < nx; di++) {
             double dist = sqrt((di - i) * cellSize[0] * (di - i) * cellSize[0] +
                                (dj - j) * cellSize[1] * (dj - j) * cellSize[1]);
             if (dist == 0) continue;
@@ -394,8 +372,8 @@ ScalarField2 HeightField::Peakness(ScalarField2& prototypicality, double centroi
         pRelElev = ScalarField2(domain, nx, ny, 0);
         pIsolation = ScalarField2(domain, nx, ny, 0);
 
-        for (int i = 0; i < nx; i++) {
-            for (int j = 0; j < ny; j++) {
+        for (int j = 0; j < ny; j++) {
+            for (int i = 0; i < nx; i++) {
                 int idx = cellId(i, j);
                 int imin = std::max(i - r, 0);
                 int jmin = std::max(j - r, 0);
@@ -422,8 +400,8 @@ ScalarField2 HeightField::Peakness(ScalarField2& prototypicality, double centroi
         }
 
         ScalarField2 satNeighs = isPeak.summedAreaTable();
-        for (int i = 0; i < nx; i++) {
-            for (int j = 0; j < ny; j++) {
+        for (int j = 0; j < ny; j++) {
+            for (int i = 0; i < nx; i++) {
                 int idx = cellId(i, j);
                 int imin = std::max(i - EXTENDED_RADII_FACTOR * r, 0);
                 int jmin = std::max(j - EXTENDED_RADII_FACTOR * r, 0);
@@ -504,8 +482,8 @@ ScalarField2 HeightField::Peakness(ScalarField2& prototypicality, double centroi
 
         // compute this scale similarity map using diagonal distance to centroid
         ScalarField2 distance(domain, nx, ny, 0);
-        for (int i = 0; i < nx; i++) {
-            for (int j = 0; j < ny; j++) {
+        for (int j = 0; j < ny; j++) {
+            for (int i = 0; i < nx; i++) {
                 double d = 0;
                 for (int k = 0; k < NUM_METRICS; k++) {
                     double dif = scaleMetrics[ri][k].at(i, j) - peakClassCentre[k];
@@ -518,8 +496,8 @@ ScalarField2 HeightField::Peakness(ScalarField2& prototypicality, double centroi
         double minDist, maxDist;
         distance.getRange(minDist, maxDist);
         ScalarField2 simil(domain, nx, ny);
-        for (int i = 0; i < nx; i++) {
-            for (int j = 0; j < ny; j++) {
+        for (int j = 0; j < ny; j++) {
+            for (int i = 0; i < nx; i++) {
                 simil(i, j) = (maxDist - distance.at(i, j)) / (maxDist - minDist);
             }
         }

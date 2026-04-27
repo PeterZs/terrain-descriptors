@@ -37,8 +37,8 @@ HeightField::Flow HeightField::GetFlow(const Index2& p) const
 IntField2 HeightField::FlowDirectionD8() const
 {
     IntField2 dir(getDomain(), nx, ny, -1);
-    for (int i = 0; i < nx; i++) {
-        for (int j = 0; j < ny; j++) {
+    for (int j = 0; j < ny; j++) {
+        for (int i = 0; i < nx; i++) {
             Flow flow = GetFlow(Index2(i,j));
             if (flow.n > 0) {
                 dir(i, j) = flow.i[flow.steepest];
@@ -191,8 +191,8 @@ ScalarField2 HeightField::StreamAreaKinematic(const std::vector<Index2>& sources
 
     // precompute gradients
     std::vector<Vector2> gradients(getNumElements());
-    for (int i = 0; i < nx; i++) {
-        for (int j = 0; j < ny; j++) {
+    for (int j = 0; j < ny; j++) {
+        for (int i = 0; i < nx; i++) {
             gradients[cellId(i, j)] = -Normalized(Gradient(i, j));
         }
     }
@@ -263,8 +263,8 @@ ScalarField2 HeightField::WetnessIndex(const ScalarField2& sa) const
 {
     ScalarField2 wetness(domain, nx, ny, 0);
     ScalarField2 slope  = Slope();
-    for (int i = 0; i < nx; i++) {
-        for (int j = 0; j < ny; j++) {
+    for (int j = 0; j < ny; j++) {
+        for (int i = 0; i < nx; i++) {
             wetness(i, j) = std::log(sa.at(i, j) / (1e-3 + slope.at(i,j)));
         }
     }
@@ -287,8 +287,8 @@ ScalarField2 HeightField::StreamPower(const ScalarField2& sa, double m, double n
 {
     ScalarField2 power(domain, nx, ny, 0);
     ScalarField2 slope = Slope();
-    for (int i = 0; i < nx; i++) {
-        for (int j = 0; j < ny; j++) {
+    for (int j = 0; j < ny; j++) {
+        for (int i = 0; i < nx; i++) {
             power(i, j) = pow(sa.at(i, j), m) * pow(slope.at(i, j), n);
         }
     }
